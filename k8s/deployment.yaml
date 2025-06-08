@@ -1,79 +1,35 @@
-# Deployment do PostgreSQL
-apiVersion: apps/v1 
-kind: Deployment
-metadata:
-  name: postgre
-spec: 
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgre
-  template:
-    metadata:
-      labels:
-        app: postgre
-    spec:
-      containers:
-        - name: postgre
-          image: postgres:15.13
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRES_USER
-              value: "review"
-            - name: POSTGRES_PASSWORD
-              value: "Passw0rd2023!"
-            - name: POSTGRES_DB
-              value: "review"
----
-# Service do PostgreSQL
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgre
-spec:
-  selector:
-    app: postgre
-  type: ClusterIP
-  ports:
-    - port: 5432
-      targetPort: 5432
----
 
-# Deployment do Review de Filmes
 apiVersion: apps/v1 
 kind: Deployment
 metadata:
-  name: review
+  name: web
 spec: 
   replicas: 10
   selector:
     matchLabels:
-      app: review
+      app: web
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
       labels:
-        app: review
+        app: web
     spec:
       containers:
-        - name: review
-          image: fabricioveronez/review-filme
+        - name: web
+          image: fabricioveronez/live-n8n
           ports:
             - containerPort: 8080
-          env:
-          - name: ASPNETCORE_HTTP_PORTS
-            value: "8080"
-          - name: ConnectionStrings__DefaultConnection
-            value: "Host=postgre;Database=review;Username=review;Password=Passw0rd2023!"
 ---
-# Service do Review de Filmes
 apiVersion: v1
 kind: Service
 metadata:
-  name: review
+  name: web
 spec:
   selector:
-    app: review
+    app: web
   type: LoadBalancer
   ports:
     - port: 80

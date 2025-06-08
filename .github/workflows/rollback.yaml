@@ -16,4 +16,4 @@ jobs:
         kubeconfig: ${{ secrets.K8S_CONFIG }}
 
     - name: Deploy to Kubernetes cluster
-      run: kubectl rollout undo deployment review
+      run: kubectl rollout undo deployment web
