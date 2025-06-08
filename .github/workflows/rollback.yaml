@@ -1,0 +1,19 @@
+name: CI-CD
+
+on:
+  workflow_dispatch:  
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4.2.2
+
+    - name: Configuracao do Kubectl
+      uses: azure/k8s-set-context@v4
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.K8S_CONFIG }}
+
+    - name: Deploy to Kubernetes cluster
+      run: kubectl rollout undo deployment review

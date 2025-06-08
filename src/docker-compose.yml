@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  review-filmes.web:
+    image: ${DOCKER_REGISTRY-}reviewfilmesweb
+    build:
+      context: .
+      dockerfile: Review-Filmes.Web/Dockerfile
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=review;Username=review;Password=Passw0rd2023!"
+    ports:
+    - "8080:8080"
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: review
+      POSTGRES_PASSWORD: Passw0rd2023!
+      POSTGRES_DB: review
+    ports:
+      - "5432:5432"

@@ -1,0 +1,59 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+    CI:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4.2.2
+
+            - name: Setup .NET Core SDK
+              uses: actions/setup-dotnet@v3.4.2
+              with:
+                dotnet-version: 8.x
+
+            - name:
+              working-directory: ./02-review/src/Review-Filmes.Test.Unit 
+              run: | 
+                dotnet test
+            
+            - name: Autenticando no Docker Registry
+              uses: docker/login-action@v3.4.0
+              with:
+                username: ${{secrets.DOCKERHUB_USER}}
+                password: ${{secrets.DOCKERHUB_PWD}}
+            
+            - name: Construção da imagem Docker
+              uses: docker/build-push-action@v6.15.0
+              with:
+                context: ./src
+                file: ./src/Review-Filmes.Web/Dockerfile
+                push: true
+                tags: |
+                    fabricioveronez/review-filme:latest
+                    fabricioveronez/review-filme:${{github.run_number}}
+                    
+    CD:
+        runs-on: ubuntu-latest
+        needs: [CI]
+        steps:
+            - uses: actions/checkout@v4.2.2
+
+            - name: Configuracao do Kubectl
+              uses: azure/k8s-set-context@v4
+              with:
+                method: kubeconfig
+                kubeconfig: ${{ secrets.K8S_CONFIG }}
+
+            - name: Deploy to Kubernetes cluster
+              uses: Azure/k8s-deploy@v5
+              with: 
+                images: |
+                    fabricioveronez/review-filme:${{github.run_number}}
+                manifests: |
+                    ./02-review/k8s/deployment.yaml
+      
