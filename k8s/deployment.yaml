@@ -1,13 +1,62 @@
+# Deployment do PostgreSQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: default
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14.3-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          value: "Pg#123"
+        - name: POSTGRES_USER
+          value: "kubedevnews"
+        - name: POSTGRES_DB
+          value: "kubedevnews"
+---
+# Service do PostgreSQL
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: default
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
 
-apiVersion: apps/v1 
+---
+# Deployment da Aplicação
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web
-spec: 
-  replicas: 10
+  namespace: default
+  labels:
+    app: kube-news-app
+spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: web
+      app: kube-news-app
   template:
     metadata:
       annotations:
@@ -15,24 +64,33 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
       labels:
-        app: web
+        app: kube-news-app
     spec:
       containers:
-        - name: web
-          image: fabricioveronez/live-n8n
-          ports:
-            - containerPort: 8080
+      - name: kube-news-app
+        image: fabricioveronez/live-n8n
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_DATABASE
+          value: "kubedevnews"
+        - name: DB_USERNAME
+          value: "kubedevnews"
+        - name: DB_PASSWORD
+          value: "Pg#123"
 ---
+# Service da Aplicação
 apiVersion: v1
 kind: Service
 metadata:
   name: web
+  namespace: default
 spec:
   selector:
-    app: web
-  type: LoadBalancer
+    app: kube-news-app
   ports:
-    - port: 80
-      targetPort: 8080
-
-
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
