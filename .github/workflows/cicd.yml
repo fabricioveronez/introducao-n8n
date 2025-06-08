@@ -55,5 +55,5 @@ jobs:
                 images: |
                     fabricioveronez/review-filme:${{github.run_number}}
                 manifests: |
-                    ./02-review/k8s/deployment.yaml
+                    ./k8s/deployment.yaml
       
