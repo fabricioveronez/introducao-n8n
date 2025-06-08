@@ -17,7 +17,7 @@ jobs:
                 dotnet-version: 8.x
 
             - name:
-              working-directory: ./02-review/src/Review-Filmes.Test.Unit 
+              working-directory: ./src/Review-Filmes.Test.Unit 
               run: | 
                 dotnet test
             
